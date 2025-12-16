@@ -13,7 +13,36 @@ export default function Analytics() {
   const inProgressIdeas = ideas.filter(i => i.status === 'in-progress').length;
   const completionRate = totalIdeas > 0 ? ((completedIdeas / totalIdeas) * 100).toFixed(1) : 0;
 
-  const stats = [
+  // Calculate stats for charts
+  const calculateStats = () => {
+    // Group by status
+    const statusCounts: { [key: string]: number } = {};
+    ideas.forEach(idea => {
+      statusCounts[idea.status] = (statusCounts[idea.status] || 0) + 1;
+    });
+
+    // Group by category
+    const categoryCounts: { [key: string]: number } = {};
+    ideas.forEach(idea => {
+      categoryCounts[idea.category] = (categoryCounts[idea.category] || 0) + 1;
+    });
+
+    // Group by priority
+    const priorityCounts: { [key: string]: number } = {};
+    ideas.forEach(idea => {
+      priorityCounts[idea.priority] = (priorityCounts[idea.priority] || 0) + 1;
+    });
+
+    return {
+      byStatus: Object.entries(statusCounts).map(([_id, count]) => ({ _id, count })),
+      byCategory: Object.entries(categoryCounts).map(([_id, count]) => ({ _id, count })),
+      byPriority: Object.entries(priorityCounts).map(([_id, count]) => ({ _id, count })),
+    };
+  };
+
+  const stats = calculateStats();
+
+  const statsCards = [
     { label: 'Tổng số ý tưởng', value: totalIdeas, icon: FileText, color: 'bg-blue-500' },
     { label: 'Hoàn thành', value: completedIdeas, icon: TrendingUp, color: 'bg-green-500' },
     { label: 'Đang thực hiện', value: inProgressIdeas, icon: Calendar, color: 'bg-yellow-500' },
@@ -42,7 +71,7 @@ export default function Analytics() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat, index) => {
+          {statsCards.map((stat, index) => {
             const Icon = stat.icon;
             return (
               <div key={index} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
@@ -63,20 +92,20 @@ export default function Analytics() {
           {/* Status Distribution */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Phân bố theo trạng thái</h2>
-            <StatusChart ideas={ideas} />
+            <StatusChart stats={stats} />
           </div>
 
           {/* Category Distribution */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Phân bố theo danh mục</h2>
-            <CategoryChart ideas={ideas} />
+            <CategoryChart stats={stats} />
           </div>
         </div>
 
         {/* Priority Analysis */}
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Phân tích độ ưu tiên</h2>
-          <PriorityChart ideas={ideas} />
+          <PriorityChart stats={stats} />
         </div>
 
         {/* Additional Insights */}
